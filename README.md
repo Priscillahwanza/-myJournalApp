@@ -1,4 +1,4 @@
-# Project Name
+# Project Name Journal App
 
 This project consists of a backend service built with Node.js and Express, and a mobile application built with React Native. The backend service provides authentication and journal entry management functionalities, while the mobile app interacts with these services.
 
