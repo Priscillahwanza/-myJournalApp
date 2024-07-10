@@ -1,7 +1,6 @@
-// src/models/journalEntry.ts
 import { DataTypes, Model } from 'sequelize';
-import sequelize from '../config/database';
-import User from './user';
+import {sequelize} from '../config/database';
+import User from './User';
 
 class JournalEntry extends Model {
   public id!: number;
@@ -11,6 +10,7 @@ class JournalEntry extends Model {
   public date!: Date;
   public userId!: number;
 
+  // timestamps!
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -23,15 +23,15 @@ JournalEntry.init(
       primaryKey: true,
     },
     title: {
-      type: DataTypes.STRING,
+      type: new DataTypes.STRING(128),
       allowNull: false,
     },
     content: {
-      type: DataTypes.TEXT,
+      type: new DataTypes.STRING(128),
       allowNull: false,
     },
     category: {
-      type: DataTypes.STRING,
+      type: new DataTypes.STRING(128),
       allowNull: false,
     },
     date: {
@@ -44,12 +44,11 @@ JournalEntry.init(
     },
   },
   {
-    sequelize,
     tableName: 'journalEntries',
+    sequelize,
   }
 );
 
 JournalEntry.belongsTo(User, { foreignKey: 'userId' });
-User.hasMany(JournalEntry, { foreignKey: 'userId' });
 
 export default JournalEntry;

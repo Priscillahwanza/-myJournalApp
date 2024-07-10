@@ -1,63 +1,18 @@
-import { Response } from 'express';
-import JournalEntry from '../models/journalEntry';
-import { AuthenticatedRequest } from '../types/express';
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-const createEntry = async (req: AuthenticatedRequest, res: Response) => {
-  const { title, content, category, date } = req.body;
-  const userId = req.userId; // Assumes middleware sets req.userId
-  try {
-    const entry = await JournalEntry.create({ title, content, category, date, userId });
-    res.status(201).json(entry);
-  } catch (error) {
-    res.status(400).json({ error: 'Failed to create entry' });
-  }
+dotenv.config();
+
+export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token == null) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET as string, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
 };
-
-const getEntries = async (req: AuthenticatedRequest, res: Response) => {
-  const userId = req.userId; // Assumes middleware sets req.userId
-  try {
-    const entries = await JournalEntry.findAll({ where: { userId } });
-    res.json(entries);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch entries' });
-  }
-};
-
-const updateEntry = async (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-  const { title, content, category, date } = req.body;
-  const userId = req.userId; // Assumes middleware sets req.userId
-  try {
-    const entry = await JournalEntry.findOne({ where: { id, userId } });
-    if (entry) {
-      entry.title = title || entry.title;
-      entry.content = content || entry.content;
-      entry.category = category || entry.category;
-      entry.date = date || entry.date;
-      await entry.save();
-      res.json(entry);
-    } else {
-      res.status(404).json({ error: 'Entry not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update entry' });
-  }
-};
-
-const deleteEntry = async (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-  const userId = req.userId; // Assumes middleware sets req.userId
-  try {
-    const entry = await JournalEntry.findOne({ where: { id, userId } });
-    if (entry) {
-      await entry.destroy();
-      res.status(204).send();
-    } else {
-      res.status(404).json({ error: 'Entry not found' });
-    }
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete entry' });
-  }
-};
-
-export { createEntry, getEntries, updateEntry, deleteEntry };
